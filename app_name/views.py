@@ -22,7 +22,7 @@ def solve_homework_api(request):
                 model='gemini-2.5-flash',
                 contents=[prompt],
                 config=genai_types.GenerateContentConfig(
-                    system_instruction="Ты — умный помощник по учебе. Пиши понятные пошаговые решения.",
+                    system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения.",
                     max_output_tokens=1500,
                 )
             )

@@ -4,7 +4,7 @@ class Subject(models.Model):
     name = models.CharField(max_length=100)
 
 class Grade(models.Model):
-    number = models.PositiveIntegerField()
+    number = models.PositiveBigIntegerField()
 
 class Textbook(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
