@@ -1,26 +1,23 @@
 import asyncio
 import logging
+import aiohttp
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from django.core.management.base import BaseCommand
-from openai import OpenAI
+from google import genai
+from google.genai import types as genai_types
 
 logging.basicConfig(level=logging.INFO)
 
-class Command(BaseCommand):
-    help = 'Запуск Telegram-бота для ГДЗ'
-
-    def handle(self, *args, **options):
-        asyncio.run(main())
-
-TELEGRAM_TOKEN = ""
-OPENAI_API_KEY = ""
+TELEGRAM_TOKEN = "ВАШ_TELEGRAM_BOT_TOKEN"
+GEMINI_API_KEY = "ВАШ_GEMINI_API_KEY"
 
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()
-client = OpenAI(api_key=OPENAI_API_KEY)
+
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 class HomeworkState(StatesGroup):
     waiting_for_photo = State()
@@ -46,29 +43,47 @@ async def handle_homework_photo(message: types.Message, state: FSMContext):
     processing_msg = await message.answer("Анализирую задание...")
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Реши это домашнее задание пошагово."},
-                        {"type": "image_url", "image_url": {"url": file_url}}
-                    ]
-                }
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as resp:
+                image_bytes = await resp.read()
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[
+                genai_types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type='image/jpeg',
+                ),
+                "Реши это домашнее задание пошагово."
             ],
-            max_tokens=1500
+            config=genai_types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                max_output_tokens=1500,
+            )
         )
         
-        answer_text = response.choices[0].message.content
-        await bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
+        answer_text = response.text
         
+        await bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
         await message.answer(answer_text, parse_mode="Markdown")
 
     except Exception as e:
-        logging.error(f"Ошибка: {e}")
-        await message.edit_text("Произошла ошибка при обработке запроса.")
+        logging.error(f"Ошибка при работе с Gemini: {e}")
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
+        except:
+            pass
+        await message.answer("Произошла ошибка при обработке запроса.")
+
+@dp.message(HomeworkState.waiting_for_photo)
+async def not_photo(message: types.Message):
+    await message.answer("Пожалуйста, отправь именно **фотографию** задания.")
 
 async def main():
     await dp.start_polling(bot)
+
+class Command(BaseCommand):
+    help = 'Запуск Telegram-бота для ГДЗ через Gemini'
+
+    def handle(self, *args, **options):
+        asyncio.run(main())

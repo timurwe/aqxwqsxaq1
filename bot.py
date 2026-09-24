@@ -4,15 +4,17 @@ from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from openai import OpenAI
+from google import genai
+from google.genai import types as genai_types
 
 logging.basicConfig(level=logging.INFO)
 TELEGRAM_TOKEN = "8859225888:AAEPPzQmiKZtfz-y3Wk2stHWmeh48OA6GmA"
-OPENAI_API_KEY = ""
+GEMINI_API_KEY = "ВАШ_КЛЮЧ_ОТ_GEMINI"
 
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()
-client = OpenAI(api_key=OPENAI_API_KEY)
+
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 class HomeworkState(StatesGroup): 
     waiting_for_photo = State()
@@ -26,7 +28,7 @@ SYSTEM_PROMPT = """
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
     await message.answer(
-        "Привет! Я бот-помощник по учебе.\n\n"
+        "Привет! Я бот-помощник по учебе (работает на Gemini).\n\n"
         "Отправь мне фото страницы с заданием или примером, и я напишу пошаговое решение!"
     )
     await state.set_state(HomeworkState.waiting_for_photo)
@@ -42,30 +44,35 @@ async def handle_homework_photo(message: types.Message, state: FSMContext):
     processing_msg = await message.answer("Читаю задание и считаю...")
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Реши это домашнее задание пошагово."},
-                        {"type": "image_url", "image_url": {"url": file_url}}
-                    ]
-                }
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as resp:
+                image_bytes = await resp.read()
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[
+                genai_types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type='image/jpeg',
+                ),
+                "Реши это домашнее задание пошагово."
             ],
-            max_tokens=1500
+            config=genai_types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                max_output_tokens=1500,
+            )
         )
         
-        answer_text = response.choices[0].message.content
+        answer_text = response.text
         
         await bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
-        
         await message.answer(answer_text, parse_mode="Markdown")
 
     except Exception as e:
-        logging.error(f"Ошибка при работе с OpenAI: {e}")
-        await message.edit_text("Произошла ошибка при обработке запроса. Попробуй еще раз позже.")
+        logging.error(f"Ошибка при работе с Gemini: {e}")
+        await bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
+        await message.answer("Произошла ошибка при обработке запроса. Попробуй еще раз позже.")
 
 @dp.message(HomeworkState.waiting_for_photo)
 async def not_photo(message: types.Message):
