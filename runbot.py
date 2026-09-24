@@ -11,8 +11,8 @@ from google.genai import types as genai_types
 
 logging.basicConfig(level=logging.INFO)
 
-TELEGRAM_TOKEN = "ВАШ_TELEGRAM_BOT_TOKEN"
-GEMINI_API_KEY = "ВАШ_GEMINI_API_KEY"
+TELEGRAM_TOKEN = "8859225888:AAEPPzQmiKZtfz-y3Wk2stHWmeh48OA6GmA"
+GEMINI_API_KEY = "AIzaSyDKNGQ4wZ6ehjRy3lv8cKXar7KLYpBavWo"
 
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()

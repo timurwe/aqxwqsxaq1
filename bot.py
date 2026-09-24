@@ -9,7 +9,7 @@ from google.genai import types as genai_types
 
 logging.basicConfig(level=logging.INFO)
 TELEGRAM_TOKEN = "8859225888:AAEPPzQmiKZtfz-y3Wk2stHWmeh48OA6GmA"
-GEMINI_API_KEY = "ВАШ_КЛЮЧ_ОТ_GEMINI"
+GEMINI_API_KEY = "AIzaSyDKNGQ4wZ6ehjRy3lv8cKXar7KLYpBavWo"
 
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()
