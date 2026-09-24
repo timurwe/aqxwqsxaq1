@@ -33,7 +33,7 @@ SYSTEM_PROMPT = """
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
     await message.answer(
-        "👋 Привет! Отправь мне фото страницы с заданием, и я найду или решу его!"
+        "Привет! Отправь мне фото страницы с заданием, и я найду или решу его!"
     )
     await state.set_state(HomeworkState.waiting_for_photo)
 
@@ -43,7 +43,7 @@ async def handle_homework_photo(message: types.Message, state: FSMContext):
     file_info = await bot.get_file(photo.file_id)
     file_url = f"https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_info.file_path}"
     
-    processing_msg = await message.answer("🔍 Анализирую задание...")
+    processing_msg = await message.answer("Анализирую задание...")
 
     try:
         response = client.chat.completions.create(
@@ -68,7 +68,7 @@ async def handle_homework_photo(message: types.Message, state: FSMContext):
 
     except Exception as e:
         logging.error(f"Ошибка: {e}")
-        await message.edit_text("⚠️ Произошла ошибка при обработке запроса.")
+        await message.edit_text("Произошла ошибка при обработке запроса.")
 
 async def main():
     await dp.start_polling(bot)

@@ -14,7 +14,7 @@ bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-class HomeworkState(StatesGroup):
+class HomeworkState(StatesGroup): 
     waiting_for_photo = State()
 
 SYSTEM_PROMPT = """
@@ -26,8 +26,8 @@ SYSTEM_PROMPT = """
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
     await message.answer(
-        "👋 Привет! Я бот-помощник по учебе.\n\n"
-        "📸 Отправь мне фото страницы с заданием или примером, и я напишу пошаговое решение!"
+        "Привет! Я бот-помощник по учебе.\n\n"
+        "Отправь мне фото страницы с заданием или примером, и я напишу пошаговое решение!"
     )
     await state.set_state(HomeworkState.waiting_for_photo)
 
@@ -39,7 +39,7 @@ async def handle_homework_photo(message: types.Message, state: FSMContext):
     
     file_url = f"https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}"
     
-    processing_msg = await message.answer("🔍 Читаю задание и считаю...")
+    processing_msg = await message.answer("Читаю задание и считаю...")
 
     try:
         response = client.chat.completions.create(
@@ -65,11 +65,11 @@ async def handle_homework_photo(message: types.Message, state: FSMContext):
 
     except Exception as e:
         logging.error(f"Ошибка при работе с OpenAI: {e}")
-        await message.edit_text("⚠️ Произошла ошибка при обработке запроса. Попробуй еще раз позже.")
+        await message.edit_text("Произошла ошибка при обработке запроса. Попробуй еще раз позже.")
 
 @dp.message(HomeworkState.waiting_for_photo)
 async def not_photo(message: types.Message):
-    await message.answer("⚠️ Пожалуйста, отправь именно **фотографию** задания.")
+    await message.answer("Пожалуйста, отправь именно **фотографию** задания.")
 
 async def main():
     await dp.start_polling(bot)
