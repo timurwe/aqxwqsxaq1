@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ГДЗ в Telegram</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #f3f4f6);
+            --text-color: var(--tg-theme-text-color, #1f2937);
+            --hint-color: var(--tg-theme-hint-color, #9ca3af);
+            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+            --button-color: var(--tg-theme-button-color, #2563eb);
+            --button-text: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tg-card {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .tg-button {
+            background-color: var(--button-color);
+            color: var(--button-text);
+        }
+    </style>
+</head>
+<body class="p-4 pb-20">
+
+    <header class="mb-5 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold">📚 ГДЗ Карманный</h1>
+            <p class="text-sm opacity-70" id="user-greeting">Привет! Выбери класс и предмет</p>
+        </div>
+        <div class="h-10 w-10 rounded-full tg-card flex items-center justify-center font-bold shadow-sm">
+            🤖
+        </div>
+    </header>
+
+    <section class="mb-5">
+        <h3 class="text-sm font-semibold mb-3 opacity-80 uppercase tracking-wider">Класс</h3>
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none" id="grades-container">
+        </div>
+    </section>
+
+    <div class="mb-5">
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none opacity-50">🔍</span>
+            <input type="text" id="search-input" placeholder="Поиск предмета или автора..." 
+                class="w-full pl-10 pr-4 py-3 rounded-xl tg-card border-none outline-none text-sm shadow-sm transition focus:ring-2 focus:ring-blue-500">
+        </div>
+    </div>
+
+    <section>
+        <h3 class="text-sm font-semibold mb-3 opacity-80 uppercase tracking-wider">Предметы</h3>
+        <div class="grid grid-cols-2 gap-3" id="subjects-grid">
+        </div>
+    </section>
+
+    <div id="solution-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="tg-card w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[85vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-200">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-lg font-bold">Решение упражнения</h2>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full flex items-center justify-center opacity-60 hover:opacity-100 bg-gray-500/10">✕</button>
+            </div>
+            <div class="space-y-4 text-sm">
+                <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                    <p class="font-semibold text-blue-500 mb-1">Условие:</p>
+                    <p id="modal-task" class="opacity-90">Дано уравнение: 2x + 5 = 15. Найдите x.</p>
+                </div>
+                <div>
+                    <p class="font-semibold mb-2">Пошаговый ход решения:</p>
+                    <ol class="list-decimal list-inside space-y-2 opacity-90" id="modal-steps">
+                        <li>Перенесем число 5 в правую часть: 2x = 15 - 5.</li>
+                        <li>Получим: 2x = 10.</li>
+                        <li>Разделим обе части на 2: x = 10 / 2.</li>
+                        <li>Ответ: x = 5.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="mt-6">
+                <button onclick="closeModal()" class="w-full py-3 rounded-xl tg-button font-medium shadow-md">
+                    Понятно, закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); 
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const userName = tg.initDataUnsafe.user.first_name || "Школьник";
+            document.getElementById('user-greeting').innerText = `Привет, ${userName}! Выбери класс`;
+        }
+
+        const grades = [5, 6, 7, 8, 9, 10, 11];
+        let selectedGrade = 8;
+
+        const subjects = [
+            { id: 'math', name: 'Алгебра', icon: '📐', books: 12 },
+            { id: 'geometry', name: 'Геометрия', icon: '📏', books: 8 },
+            { id: 'rus', name: 'Русский язык', icon: '📖', books: 15 },
+            { id: 'eng', name: 'Английский язык', icon: '🇬🇧', books: 10 },
+            { id: 'physics', name: 'Физика', icon: '⚡', books: 6 },
+            { id: 'chem', name: 'Химия', icon: '🧪', books: 6 },
+            { id: 'bio', name: 'Биология', icon: '🧬', books: 7 },
+            { id: 'history', name: 'История', icon: '🏛️', books: 9 },
+        ];
+
+        const gradesContainer = document.getElementById('grades-container');
+        function renderGrades() {
+            gradesContainer.innerHTML = grades.map(grade => `
+                <button onclick="selectGrade(${grade})" class="px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap ${selectedGrade === grade ? 'tg-button shadow-sm' : 'tg-card opacity-70 hover:opacity-100'}">
+                    ${grade} класс
+                </button>
+            `).join('');
+        }
+
+        function selectGrade(grade) {
+            selectedGrade = grade;
+            renderGrades();
+            tg.HapticFeedback.selectionChanged(); 
+        }
+
+        const subjectsGrid = document.getElementById('subjects-grid');
+        function renderSubjects(filter = '') {
+            const filtered = subjects.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+            subjectsGrid.innerHTML = filtered.map(sub => `
+                <div onclick="openSubject('${sub.name}')" class="tg-card p-4 rounded-2xl flex flex-col justify-between cursor-pointer hover:scale-[1.02] active:scale-95 transition shadow-sm">
+                    <div class="text-3xl mb-2">${sub.icon}</div>
+                    <div>
+                        <h4 class="font-bold text-sm">${sub.name}</h4>
+                        <span class="text-xs opacity-50">${sub.books} учебников (${selectedGrade} кл.)</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            renderSubjects(e.target.value);
+        });
+
+        function openSubject(subjectName) {
+            tg.HapticFeedback.impactOccurred('medium');
+            document.getElementById('modal-title').innerText = `${subjectName} (${selectedGrade} класс)`;
+            document.getElementById('solution-modal').classList.remove('hidden');
+            
+            tg.MainButton.text = "Закрыть ГДЗ";
+            tg.MainButton.show();
+        }
+
+        function closeModal() {
+            document.getElementById('solution-modal').classList.add('hidden');
+            tg.MainButton.hide();
+        }
+
+        Telegram.WebApp.onEvent('mainButtonClicked', function(){
+            closeModal();
+        });
+
+        renderGrades();
+        renderSubjects();
+    </script>
+</body>
+</html>
