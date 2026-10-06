@@ -2,10 +2,10 @@ import subprocess
 import sys
 
 def run_services():
-    print("🚀 Запуск миграций базы данных...")
+    print("Запуск миграций базы данных...")
     subprocess.run([sys.executable, "manage.py", "migrate"])
 
-    print("🤖 Запуск Telegram-бота и сервера...")
+    print("Запуск Telegram-бота и сервера...")
     bot_process = subprocess.Popen([sys.executable, "bot.py"])
     uvicorn_process = subprocess.Popen(["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"])
 
@@ -13,7 +13,7 @@ def run_services():
         bot_process.wait()
         uvicorn_process.wait()
     except KeyboardInterrupt:
-        print("\n🛑 Остановка проекта...")
+        print("\n Остановка проекта...")
         bot_process.terminate()
         uvicorn_process.terminate()
 
