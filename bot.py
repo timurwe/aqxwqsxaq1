@@ -6,6 +6,10 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from google import genai
 from google.genai import types as genai_types
+from dotenv import load_dotenv
+import os
+
+load_dotenv() 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_name.settings')
 
