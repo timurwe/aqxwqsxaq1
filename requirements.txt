@@ -3,3 +3,4 @@ gunicorn
 aiogram
 google-genai==1.50.0
 asgiref
+daphne
