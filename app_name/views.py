@@ -12,7 +12,6 @@ client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 def home(request):
     """Отрисовка главной страницы веб-приложения (Telegram Mini App)"""
     return render(request, 'index.html')
-
 @csrf_exempt
 def solve_homework_api(request):
     """API-эндпоинт для решения домашних заданий по текстам или фотографиям"""
