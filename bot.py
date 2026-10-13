@@ -7,27 +7,23 @@ from aiogram.filters import Command
 from google import genai
 from google.genai import types as genai_types
 from dotenv import load_dotenv
-import os
 
 load_dotenv() 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_name.settings')
 
-
-api_key = os.environ.get("GEMINI_API_KEY")
-
-if not api_key:
-    raise ValueError("GEMINI_API_KEY environment variable is missing or empty!")
-
-client = genai.Client(api_key=api_key)
-
 logging.basicConfig(level=logging.INFO)
 
 API_TOKEN = os.environ.get("BOT_TOKEN")
-
 bot = Bot(token=API_TOKEN)
-
 dp = Dispatcher()
+
+def get_gemini_client():
+    """Безопасное создание клиента Gemini при вызове"""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable is missing or empty!")
+    return genai.Client(api_key=api_key)
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -43,6 +39,7 @@ async def handle_photo(message: types.Message):
     await message.answer("🔍 Читаю фото и решаю задачу, подожди секунду...")
     
     try:
+        client = get_gemini_client()
         photo = message.photo[-1]
         file_info = await bot.get_file(photo.file_id)
         file_path = file_info.file_path
@@ -79,6 +76,7 @@ async def search_homework(message: types.Message):
     query_text = message.text.lower()
     
     try:
+        client = get_gemini_client()
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=[f"Помоги решить школьное задание: {query_text}. Дай подробное пошаговое решение."],

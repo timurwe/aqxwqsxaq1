@@ -7,25 +7,28 @@ from google.genai import types as genai_types
 import os
 import traceback
 from dotenv import load_dotenv
-import os
 
 load_dotenv()  
-
-api_key = os.environ.get("GEMINI_API_KEY")
-
-if not api_key:
-    raise ValueError("GEMINI_API_KEY environment variable is missing or empty!")
-
-client = genai.Client(api_key=api_key)
 
 def home(request):
     """Отрисовка главной страницы веб-приложения (Telegram Mini App)"""
     return render(request, 'index.html')
+
 @csrf_exempt
 def solve_homework_api(request):
     """API-эндпоинт для решения домашних заданий по текстам или фотографиям"""
     if request.method == 'POST':
         try:
+            # Безопасная инициализация клиента внутри запроса
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'GEMINI_API_KEY environment variable is missing or empty!'
+                }, status=500)
+            
+            client = genai.Client(api_key=api_key)
+
             if request.FILES.get('image'):
                 image_file = request.FILES['image']
                 temp_path = f"temp_{image_file.name}"
