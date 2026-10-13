@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ГДЗ в Telegram</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .tg-card {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .tg-button {
+        background-color: var(--button-color);
+        color: var(--button-text);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .custom-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
+
+<header class="mb-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="h-12 w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl shadow-inner">
+            ✨
+        </div>
+        <div>
+            <h1 class="text-xl font-black tracking-tight">AI ГДЗ Карманный</h1>
+            <p class="text-xs opacity-60 font-medium" id="user-greeting">Привет! Выбери класс и предмет</p>
+        </div>
+    </div>
+</header>
+
+<section class="mb-6">
+    <div class="tg-card p-5 rounded-3xl relative overflow-hidden shadow-xl border border-indigo-500/20">
+        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div class="flex items-center gap-3 mb-3">
+            <span class="text-2xl">📸</span>
+            <div>
+                <h2 class="text-sm font-bold">Сфотографируй задачу</h2>
+                <p class="text-xs opacity-65">Искусственный интеллект решит её за секунду</p>
+            </div>
+        </div>
+
+        <div id="preview-container" class="hidden mb-3 relative rounded-xl overflow-hidden max-h-40 border border-white/10 flex items-center justify-center bg-black/40">
+            <img id="image-preview" src="#" alt="Preview" class="object-cover w-full h-full max-h-40">
+            <button onclick="clearPhoto()" class="absolute top-2 right-2 bg-black/70 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs">✕</button>
+        </div>
+
+        <div class="flex gap-2">
+            <label class="flex-1 py-3 px-4 rounded-xl tg-button text-center font-semibold text-xs cursor-pointer shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center justify-center gap-2">
+                <span>📂 Выбрать или снять фото</span>
+                <input type="file" id="task-photo" accept="image/*" capture="environment" class="hidden" onchange="previewFile()">
+            </label>
+            <button id="send-photo-btn" onclick="sendPhotoTask()" class="hidden py-3 px-4 rounded-xl bg-emerald-600 text-white font-semibold text-xs shadow-lg active:scale-95 transition">
+                Решить ✨
+            </button>
+        </div>
+    </div>
+</section>
+
+<section class="mb-6">
+    <div class="flex justify-between items-center mb-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider opacity-60">Класс обучения</h3>
+    </div>
+    <div class="flex gap-2 overflow-x-auto custom-scrollbar pb-1" id="grades-container">
+    </div>
+</section>
+
+<div class="mb-6">
+    <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none opacity-40">🔍</span>
+        <input type="text" id="search-input" placeholder="Поиск предмета или темы..." 
+            class="w-full pl-11 pr-4 py-3.5 rounded-2xl tg-card border-none outline-none text-sm shadow-sm transition focus:ring-2 focus:ring-indigo-500">
+    </div>
+</div>
+
+<section>
+    <div class="flex justify-between items-center mb-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider opacity-60">Предметы</h3>
+    </div>
+    <div class="grid grid-cols-2 gap-3" id="subjects-grid">
+    </div>
+</section>
+
+<div id="solution-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="tg-card w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl border border-white/10 animate-in slide-in-from-bottom duration-300">
+        <div class="flex justify-between items-center mb-5 pb-3 border-b border-white/5">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">💡</span>
+                <h2 id="modal-title" class="text-base font-bold">Решение упражнения</h2>
+            </div>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full flex items-center justify-center opacity-60 hover:opacity-100 bg-white/5 transition">✕</button>
+        </div>
+        
+        <div class="space-y-4 text-sm leading-relaxed">
+            <div id="modal-task-box" class="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+                <p class="font-bold text-indigo-400 mb-1 text-xs uppercase tracking-wider">Условие:</p>
+                <p id="modal-task" class="opacity-90 font-medium">Анализируем задачу...</p>
+            </div>
+            <div>
+                <p class="font-bold mb-3 text-xs uppercase tracking-wider opacity-60">Пошаговый ход решения:</p>
+                <div id="modal-steps" class="space-y-3 opacity-90 text-sm bg-black/20 p-4 rounded-2xl border border-white/5">
+                    <p>Идет генерация ответа...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 pt-2">
+            <button onclick="closeModal()" class="w-full py-3.5 rounded-2xl tg-button font-bold text-sm shadow-lg active:scale-95 transition">
+                Понятно, закрыть
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand(); 
+
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const userName = tg.initDataUnsafe.user.first_name || "Школьник";
+        document.getElementById('user-greeting').innerText = `Привет, ${userName}! Выбери класс`;
+    }
+
+    const grades = [5, 6, 7, 8, 9, 10, 11];
+    let selectedGrade = 8;
+
+    const subjects = [
+        { id: 'math', name: 'Алгебра', icon: '📐', books: 12 },
+        { id: 'geometry', name: 'Геометрия', icon: '📏', books: 8 },
+        { id: 'rus', name: 'Русский язык', icon: '📖', books: 15 },
+        { id: 'eng', name: 'Английский язык', icon: '🇬🇧', books: 10 },
+        { id: 'physics', name: 'Физика', icon: '⚡', books: 6 },
+        { id: 'chem', name: 'Химия', icon: '🧪', books: 6 },
+        { id: 'bio', name: 'Биология', icon: '🧬', books: 7 },
+        { id: 'history', name: 'История', icon: '🏛️', books: 9 },
+    ];
+
+    const gradesContainer = document.getElementById('grades-container');
+    function renderGrades() {
+        gradesContainer.innerHTML = grades.map(grade => `
+            <button onclick="selectGrade(${grade})" class="px-4 py-2.5 rounded-2xl text-xs font-bold transition whitespace-nowrap shadow-sm ${selectedGrade === grade ? 'tg-button shadow-indigo-500/20' : 'tg-card opacity-60 hover:opacity-100'}">
+                ${grade} класс
+            </button>
+        `).join('');
+    }
+
+    function selectGrade(grade) {
+        selectedGrade = grade;
+        renderGrades();
+        if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); 
+    }
+
+    const subjectsGrid = document.getElementById('subjects-grid');
+    function renderSubjects(filter = '') {
+        const filtered = subjects.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+        subjectsGrid.innerHTML = filtered.map(sub => `
+            <div onclick="openSubject('${sub.name}')" class="tg-card p-4 rounded-3xl flex flex-col justify-between cursor-pointer hover:scale-[1.02] active:scale-95 transition shadow-sm group">
+                <div class="text-3xl mb-3 p-2.5 w-fit rounded-2xl bg-white/5 group-hover:bg-indigo-500/15 transition">${sub.icon}</div>
+                <div>
+                    <h4 class="font-bold text-sm mb-0.5">${sub.name}</h4>
+                    <span class="text-[11px] opacity-40 font-medium">${sub.books} учебников (${selectedGrade} кл.)</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        renderSubjects(e.target.value);
+    });
+
+    function previewFile() {
+        const fileInput = document.getElementById('task-photo');
+        const preview = document.getElementById('image-preview');
+        const previewContainer = document.getElementById('preview-container');
+        const sendBtn = document.getElementById('send-photo-btn');
+
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+                sendBtn.classList.remove('hidden');
+            }
+            reader.readAsDataURL(fileInput.files[0]);
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        }
+    }
+
+    function clearPhoto() {
+        document.getElementById('task-photo').value = '';
+        document.getElementById('preview-container').classList.add('hidden');
+        document.getElementById('send-photo-btn').classList.add('hidden');
+    }
+
+    async function sendPhotoTask() {
+        const fileInput = document.getElementById('task-photo');
+        if (fileInput.files.length === 0) return;
+
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+
+        openModal("Анализ фотографии...", "ИИ считывает текст и решает задачу...");
+        document.getElementById('modal-steps').innerHTML = '<div class="flex items-center justify-center py-6"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>';
+
+        try {
+            const res = await fetch('/api/solve/', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                document.getElementById('modal-title').innerText = "Решение задачи по фото";
+                document.getElementById('modal-task').innerText = "Распознанное задание из изображения";
+                document.getElementById('modal-steps').innerHTML = `<p class="whitespace-pre-line">${data.solution}</p>`;
+            } else {
+                document.getElementById('modal-steps').innerHTML = `<p class="text-red-400">Ошибка: ${data.error}</p>`;
+            }
+        } catch (err) {
+            document.getElementById('modal-steps').innerHTML = `<p class="text-red-400">Ошибка соединения с сервером.</p>`;
+        }
+    }
+
+    function openSubject(subjectName) {
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        openModal(`${subjectName} (${selectedGrade} класс)`, `Поиск типовых задач для ${subjectName}...`);
+        
+        setTimeout(() => {
+            document.getElementById('modal-task').innerText = `Пример задачи по предмету ${subjectName}`;
+            document.getElementById('modal-steps').innerHTML = `
+                <p>1. Изучите теоретический материал параграфа по предмету ${subjectName}.</p>
+                <p>2. Используйте формулы или правила для ${selectedGrade} класса.</p>
+                <p>3. Запишите окончательный ответ и проверьте вычисления.</p>
+            `;
+        }, 500);
+    }
+
+    function openModal(title, taskText) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-task').innerText = taskText;
+        document.getElementById('modal-steps').innerHTML = '<p class="opacity-70">Формирование пошагового ответа...</p>';
+        document.getElementById('solution-modal').classList.remove('hidden');
+        if (tg.MainButton) {
+            tg.MainButton.text = "Закрыть";
+            tg.MainButton.show();
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('solution-modal').classList.add('hidden');
+        if (tg.MainButton) tg.MainButton.hide();
+        clearPhoto();
+    }
+
+    if (window.Telegram.WebApp.onEvent) {
+        Telegram.WebApp.onEvent('mainButtonClicked', function(){
+            closeModal();
+        });
+    }
+
+    renderGrades();
+    renderSubjects();
+</script>
