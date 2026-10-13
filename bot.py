@@ -10,11 +10,19 @@ from google.genai import types as genai_types
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_name.settings')
 
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+api_key = os.environ.get("GEMINI_API_KEY")
+
+if not api_key:
+    raise ValueError("GEMINI_API_KEY environment variable is missing or empty!")
+
+client = genai.Client(api_key=api_key)
 
 logging.basicConfig(level=logging.INFO)
+
 API_TOKEN = os.environ.get("BOT_TOKEN")
+
 bot = Bot(token=API_TOKEN)
+
 dp = Dispatcher()
 
 @dp.message(Command("start"))

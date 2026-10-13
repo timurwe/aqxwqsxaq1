@@ -7,7 +7,12 @@ from google.genai import types as genai_types
 import os
 import traceback
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+api_key = os.environ.get("GEMINI_API_KEY")
+
+if not api_key:
+    raise ValueError("GEMINI_API_KEY environment variable is missing or empty!")
+
+client = genai.Client(api_key=api_key)
 
 def home(request):
     """Отрисовка главной страницы веб-приложения (Telegram Mini App)"""
