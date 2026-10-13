@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['aqxwqsxaq.onrender.com', 'localhost', '127.0.0.1']
 
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'app_name',
-    'daphne',
 
 ]
 
