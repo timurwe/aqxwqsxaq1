@@ -19,7 +19,6 @@ def solve_homework_api(request):
     """API-эндпоинт для решения домашних заданий по текстам или фотографиям"""
     if request.method == 'POST':
         try:
-            # Безопасная инициализация клиента внутри запроса
             api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key:
                 return JsonResponse({
@@ -40,7 +39,7 @@ def solve_homework_api(request):
                 uploaded_file = client.files.upload(file=temp_path)
                 
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.8-flash',
                     contents=[uploaded_file, "Реши эту задачу пошагово. Объясни каждый шаг понятным языком."],
                     config=genai_types.GenerateContentConfig(
                         system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
@@ -62,7 +61,7 @@ def solve_homework_api(request):
                 prompt = f"Предмет: {subject}, класс: {grade}. Задание: {task}. Дай подробное пошаговое решение."
 
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.8-flash',
                     contents=[prompt],
                     config=genai_types.GenerateContentConfig(
                         system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",

@@ -52,7 +52,7 @@ async def handle_photo(message: types.Message):
         uploaded_file = client.files.upload(file=temp_filename)
         
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.8-flash',
             contents=[
                 uploaded_file,
                 "Реши эту задачу пошагово. Объясни каждый шаг понятным языком для школьника."
@@ -78,7 +78,7 @@ async def search_homework(message: types.Message):
     try:
         client = get_gemini_client()
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.8-flash',
             contents=[f"Помоги решить школьное задание: {query_text}. Дай подробное пошаговое решение."],
             config=genai_types.GenerateContentConfig(
                 system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения.",
