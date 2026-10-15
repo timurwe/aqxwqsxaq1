@@ -45,7 +45,7 @@ def solve_homework_api(request):
                     contents=[uploaded_file, user_comment],
                     config=genai_types.GenerateContentConfig(
                         system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
-                        max_output_tokens=1500,
+                        max_output_tokens=800,
                     )
                 )
                 
@@ -74,7 +74,7 @@ def solve_homework_api(request):
                     contents=[prompt],
                     config=genai_types.GenerateContentConfig(
                         system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
-                        max_output_tokens=1500,
+                        max_output_tokens=800,
                     )
                 )
 
