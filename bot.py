@@ -55,7 +55,7 @@ async def handle_photo(message: types.Message):
             contents=[uploaded_file, user_prompt],
             config=genai_types.GenerateContentConfig(
                 system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
-                max_output_tokens=500,
+                max_output_tokens=30,
             )
         )
         
@@ -82,7 +82,7 @@ async def handle_text(message: types.Message):
             contents=[f"Помоги решить школьное задание: {query_text}. Дай подробное пошаговое решение понятным языком."],
             config=genai_types.GenerateContentConfig(
                 system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
-                max_output_tokens=500,
+                max_output_tokens=30,
             )
         )
         await message.answer(f"💡 **Решение:**\n\n{response.text}", parse_mode="Markdown")
