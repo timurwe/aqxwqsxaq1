@@ -58,7 +58,7 @@ def solve_homework_api(request):
                 try:
                     data = json.loads(request.body)
                 except json.JSONDecodeError:
-                    data = request.POST 
+                    data = request.POST
 
                 subject = data.get('subject', '')
                 grade = data.get('grade', '')
