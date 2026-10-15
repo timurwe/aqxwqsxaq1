@@ -38,9 +38,11 @@ def solve_homework_api(request):
                 
                 uploaded_file = client.files.upload(file=temp_path)
                 
+                user_comment = request.POST.get('task', 'Реши эту задачу пошагово. Объясни каждый шаг понятным языком.')
+
                 response = client.models.generate_content(
                     model='gemini-3.8-flash',
-                    contents=[uploaded_file, "Реши эту задачу пошагово. Объясни каждый шаг понятным языком."],
+                    contents=[uploaded_file, user_comment],
                     config=genai_types.GenerateContentConfig(
                         system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
                         max_output_tokens=1500,
@@ -53,10 +55,17 @@ def solve_homework_api(request):
                 return JsonResponse({'success': True, 'solution': response.text})
             
             else:
-                data = json.loads(request.body)
+                try:
+                    data = json.loads(request.body)
+                except json.JSONDecodeError:
+                    data = request.POST 
+
                 subject = data.get('subject', '')
                 grade = data.get('grade', '')
                 task = data.get('task', '')
+
+                if not task:
+                    return JsonResponse({'success': False, 'error': 'Текст задания не передан'}, status=400)
 
                 prompt = f"Предмет: {subject}, класс: {grade}. Задание: {task}. Дай подробное пошаговое решение."
 

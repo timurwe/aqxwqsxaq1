@@ -28,16 +28,17 @@ def get_gemini_client():
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
-        "Привет! 🤖 Я твой ИИ-помощник по ГДЗ.\n\n"
-        "📸 **Отправь мне фото с заданием**, текстом или напиши условие (например: *Алгебра 7 класс номер 15*), "
+        "Привет! 🤖 Я твой ИИ-помощник по учебе.\n\n"
+        "📸 **Отправь мне фото с заданием** (можно с подписью) или просто **напиши текст задачи** текстом, "
         "и я помогу тебе разобраться!",
         parse_mode="Markdown"
     )
 
 @dp.message(lambda message: message.photo is not None)
 async def handle_photo(message: types.Message):
-    await message.answer("🔍 Читаю фото и решаю задачу, подожди секунду...")
+    await message.answer("🔍 Анализирую фото и готовлю решение...")
     
+    temp_filename = "temp_task.jpg"
     try:
         client = get_gemini_client()
         photo = message.photo[-1]
@@ -45,17 +46,18 @@ async def handle_photo(message: types.Message):
         file_path = file_info.file_path
         
         downloaded_file = await bot.download_file(file_path)
-        temp_filename = "temp_task.jpg"
         with open(temp_filename, "wb") as f:
             f.write(downloaded_file.read())
             
         uploaded_file = client.files.upload(file=temp_filename)
         
+        user_prompt = message.caption if message.caption else "Реши эту задачу пошагово. Объясни каждый шаг понятным языком для школьника."
+        
         response = client.models.generate_content(
             model='gemini-3.8-flash',
             contents=[
                 uploaded_file,
-                "Реши эту задачу пошагово. Объясни каждый шаг понятным языком для школьника."
+                user_prompt
             ],
             config=genai_types.GenerateContentConfig(
                 system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
@@ -63,17 +65,20 @@ async def handle_photo(message: types.Message):
             )
         )
         
-        if os.path.exists(temp_filename):
-            os.remove(temp_filename)
-            
-        await message.answer(f"💡 **Решение по фото:**\n\n{response.text}", parse_mode="Markdown")
+        await message.answer(f"💡 **Решение:**\n\n{response.text}", parse_mode="Markdown")
         
     except Exception as e:
         await message.answer(f"❌ Произошла ошибка при обработке фото: {str(e)}")
+    finally:
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
 
 @dp.message()
 async def search_homework(message: types.Message):
-    query_text = message.text.lower()
+    if not message.text:
+        return
+        
+    query_text = message.text.strip()
     
     try:
         client = get_gemini_client()
