@@ -28,9 +28,7 @@ def get_gemini_client():
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
-        "Привет! 🤖 Я твой универсальный ИИ-помощник по учебе.\n\n"
-        "📸 **Отправь мне фото** с заданием (можно добавить подпись) или просто **напиши текстом** условие задачи, "
-        "и я сразу пришлю пошаговое решение!",
+        "Решай школьные задачи быстро, четко и по шагам на русском языке.",
         parse_mode="Markdown"
     )
 
@@ -57,7 +55,7 @@ async def handle_photo(message: types.Message):
             contents=[uploaded_file, user_prompt],
             config=genai_types.GenerateContentConfig(
                 system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
-                max_output_tokens=800,
+                max_output_tokens=500,
             )
         )
         
@@ -84,7 +82,7 @@ async def handle_text(message: types.Message):
             contents=[f"Помоги решить школьное задание: {query_text}. Дай подробное пошаговое решение понятным языком."],
             config=genai_types.GenerateContentConfig(
                 system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
-                max_output_tokens=800,
+                max_output_tokens=500,
             )
         )
         await message.answer(f"💡 **Решение:**\n\n{response.text}", parse_mode="Markdown")

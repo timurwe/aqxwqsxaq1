@@ -154,7 +154,6 @@
             opacity: 0.85;
         }
 
-        /* Блок результата */
         .result-container {
             display: none;
             background-color: var(--card-bg);
@@ -178,7 +177,6 @@
             white-space: pre-wrap;
         }
 
-        /* Индикатор загрузки */
         .loader {
             display: none;
             text-align: center;
@@ -206,13 +204,11 @@
     <div class="container">
         <h2>📚 Умный ГДЗ Помощник</h2>
 
-        <!-- Переключатель вкладок -->
         <div class="tabs">
             <div class="tab active" onclick="switchTab('text')">✍️ Текстовая задача</div>
             <div class="tab" onclick="switchTab('photo')">📸 Фото задания</div>
         </div>
 
-        <!-- Форма для текста -->
         <div id="text-section" class="form-section active">
             <div class="input-group">
                 <label for="subject">Предмет</label>
@@ -237,7 +233,6 @@
             <button class="btn-submit" onclick="submitTextTask()">Решить задачу</button>
         </div>
 
-        <!-- Форма для фото -->
         <div id="photo-section" class="form-section">
             <div class="input-group">
                 <label>Загрузить фото с заданием</label>
@@ -254,13 +249,11 @@
             <button class="btn-submit" onclick="submitPhotoTask()">Разобрать по фото</button>
         </div>
 
-        <!-- Лоадер -->
         <div id="loader" class="loader">
             <div class="spinner"></div>
             <p>ИИ думает и готовит пошаговое решение...</p>
         </div>
 
-        <!-- Блок вывода результата -->
         <div id="resultContainer" class="result-container">
             <h3>💡 Решение:</h3>
             <div id="solutionText" class="solution-text"></div>
@@ -268,7 +261,6 @@
     </div>
 
     <script>
-        // Инициализация Telegram WebApp
         let tg = window.Telegram.WebApp;
         tg.expand();
 
@@ -283,7 +275,6 @@
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('photo-section').classList.add('active');
             }
-            // Скрываем прошлый результат при переключении
             document.getElementById('resultContainer').style.display = 'none';
         }
 
