@@ -70,7 +70,7 @@ def solve_homework_api(request):
                 prompt = f"Предмет: {subject}, класс: {grade}. Задание: {task}. Дай подробное пошаговое решение."
 
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.8-flash',
                     contents=[prompt],
                     config=genai_types.GenerateContentConfig(
                         system_instruction="!Ты — умный помощник по учебе. Пиши понятные пошаговые решения на русском языке.",
